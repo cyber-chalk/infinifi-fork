@@ -10,6 +10,10 @@ let mouseX = -1; // initialize to -1 so no mouse position
 let mouseY = -1;
 let dotColor = DOT_COLOR_LIGHT_MODE;
 
+// Math.sqrt((nx - x) ** 2 + (ny - y) ** 2) <= radius + 0.5;
+// if (dx * dx + dy * dy < Math.sqrt(Math.floor(radius)) + 3.14) {
+// Math.sqrt((x - nx) ** 2 + (y - ny) ** 2) <= radius + 0.5
+
 function resizeCanvas(width, height) {
 	canvas.style.width = `${width}px`;
 	canvas.style.height = `${height}px`;
@@ -27,43 +31,37 @@ function clearCanvas() {
 let imageData = [];
 
 function drawDot(x, y) {
-	const distance = Math.sqrt((x - mouseX) ** 2 + (y - mouseY) ** 2);
-	const effectRadius = 100;
+	const cursorDistance = Math.sqrt((x - mouseX) ** 2 + (y - mouseY) ** 2);
+	let effectRadius = 100;
 
-	const radius =
+	let radius =
 		DOT_RADIUS +
 		2 *
 			devicePixelRatio *
-			((effectRadius - Math.min(distance, effectRadius)) / effectRadius);
-	// Convert hex color to RGB values
+			((effectRadius - Math.min(cursorDistance, effectRadius)) /
+				effectRadius);
+
 	const red = parseInt(dotColor.slice(1, 3), 16);
 	const green = parseInt(dotColor.slice(3, 5), 16);
 	const blue = parseInt(dotColor.slice(5, 7), 16);
+	let radnew = radius;
+	radius = Math.ceil(radius);
 
-	// Draw a larger dot by filling a square of pixels
-	for (let dx = -radius; dx < radius; dx++) {
-		for (let dy = -radius; dy < radius; dy++) {
+	for (let dx = -radius; dx <= radius; dx++) {
+		for (let dy = -radius; dy <= radius; dy++) {
 			const nx = (x + dx) | 0; // New x position
 			const ny = (y + dy) | 0; // New y position
 
-			// Math.sqrt((nx - x) ** 2 + (ny - y) ** 2) <= radius + 0.5;
-			// if (dx * dx + dy * dy < Math.sqrt(Math.floor(radius)) + 3.14) {
-			// Math.sqrt((x - nx) ** 2 + (y - ny) ** 2) <= radius + 0.5
-			if (Math.sqrt((x - nx) ** 2 + (y - ny) ** 2) <= radius) {
-				// Calculate the index in ImageData array
+			let distance = Math.sqrt((x - nx) ** 2 + (y - ny) ** 2);
+
+			if (distance < radnew * Math.sqrt(2)) {
+				// <= or maybe <
 				const index = (ny * canvas.width + nx) * 4;
 
-				if (
-					nx > 0 &&
-					nx < canvas.width &&
-					ny > 0 &&
-					ny < canvas.height
-				) {
-					imageData.data[index] = red;
-					imageData.data[index + 1] = green;
-					imageData.data[index + 2] = blue;
-					imageData.data[index + 3] = 255; // alpha
-				}
+				imageData.data[index] = red;
+				imageData.data[index + 1] = green;
+				imageData.data[index + 2] = blue;
+				imageData.data[index + 3] = 255; // alpha
 			}
 		}
 	}

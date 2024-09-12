@@ -31,9 +31,11 @@ function clearCanvas() {
 let imageData = [];
 
 function drawDot(x, y) {
+	// Calculate the distance from the mouse cursor
 	const cursorDistance = Math.sqrt((x - mouseX) ** 2 + (y - mouseY) ** 2);
-	let effectRadius = 100;
+	const effectRadius = 100; // Maximum radius of effect
 
+	// Calculate the dynamic radius based on distance to create the "fading out" effect
 	let radius =
 		DOT_RADIUS +
 		2 *
@@ -44,24 +46,45 @@ function drawDot(x, y) {
 	const red = parseInt(dotColor.slice(1, 3), 16);
 	const green = parseInt(dotColor.slice(3, 5), 16);
 	const blue = parseInt(dotColor.slice(5, 7), 16);
-	let radnew = radius;
-	radius = Math.ceil(radius);
 
-	for (let dx = -radius; dx <= radius; dx++) {
-		for (let dy = -radius; dy <= radius; dy++) {
-			const nx = (x + dx) | 0; // New x position
-			const ny = (y + dy) | 0; // New y position
+	const radiusCeil = Math.ceil(radius);
+	const radiusSquared = radius * radius;
+	const radiusCS = Math.ceil(radius) ** 2;
+	// radius = Math.max(radiusCeil, );
+	// console.log(radius, radiusCeil, radiusSquared); 2.7790927796562546 3 7.723356677937527
 
-			let distance = Math.sqrt((x - nx) ** 2 + (y - ny) ** 2);
+	// Iterate through a bounding box around the circle
+	for (let dx = -radiusCeil; dx <= radiusCeil; dx++) {
+		for (let dy = -radiusCeil; dy <= radiusCeil; dy++) {
+			// Check if the point is within the circle using squared distance
+			if (dx * dx + dy * dy <= radiusSquared) {
+				const nx = (x + dx) | 0; // New x position
+				const ny = (y + dy) | 0; // New y position
+				// console.log(radius, radiusCeil, radiusSquared);
+				// Check if the new position is within the canvas boundaries
+				// nx >= 0 && nx < canvas.width && ny >= 0 && ny < canvas.height;
+				// Calculate the index in ImageData array
 
-			if (distance < radnew * Math.sqrt(2)) {
-				// <= or maybe <
 				const index = (ny * canvas.width + nx) * 4;
+				const distanceSquared = dx * dx + dy * dy;
+				const distanceFromCenter = Math.round(
+					Math.sqrt(distanceSquared)
+				);
+				const maxDistance = radiusSquared;
 
+				// Ensure pixels near the edge are dimmed without fully fading out too quickly
+				const alpha =
+					255 *
+					Math.max(
+						0,
+						(maxDistance - distanceFromCenter) / maxDistance
+					); // Slightly adjusted gradient
+
+				// Set the pixel color to the dot color
 				imageData.data[index] = red;
 				imageData.data[index + 1] = green;
 				imageData.data[index + 2] = blue;
-				imageData.data[index + 3] = 255; // alpha
+				imageData.data[index + 3] = alpha; // alpha
 			}
 		}
 	}
